@@ -28,14 +28,16 @@ COPY --from=source /src/ ./src
 # build backend
 ARG BRANCH
 ARG VERSION
-RUN mkdir /build && \
+RUN CLEAN_VERSION=$(echo ${VERSION} | sed 's/^v//') && \
+    mkdir /build && \
     dotnet publish ./src/octo-fiesta.sln \
         -p:RuntimeIdentifiers=$RUNTIME \
         -p:Configuration=Release \
+        -p:Version=$CLEAN_VERSION \
         -p:PublishDir=/build/bin
 
 # versioning (runtime)
-ARG COMMIT=$VERSION
+ARG COMMIT=$CLEAN_VERSION
 COPY <<EOF /build/package_info
 PackageAuthor=[lucapolesel](https://github.com/lucapolesel/docker-octo-fiesta)
 UpdateMethod=Docker
