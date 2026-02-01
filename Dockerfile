@@ -6,9 +6,15 @@ WORKDIR /src
 # source stage =================================================================
 FROM base AS source
 
-# get and extract source from git
-ARG VERSION
-ADD https://github.com/V1ck3s/octo-fiesta.git#$VERSION ./
+# Install git
+RUN apk add --no-cache git
+
+# Clone
+ARG BRANCH=main
+RUN git clone --depth 1 --branch ${BRANCH} https://github.com/V1ck3s/octo-fiesta.git /src && \
+    cd /src && \
+    git rev-parse HEAD > /tmp/commit_sha && \
+    git rev-parse --short HEAD > /tmp/commit_sha_short
 
 # normalize arch ===============================================================
 FROM base AS base-arm64
@@ -26,23 +32,25 @@ RUN apk add --no-cache dotnet9-sdk
 COPY --from=source /src/ ./src
 
 # build backend
-ARG BRANCH
-ARG VERSION
-RUN CLEAN_VERSION=$(echo ${VERSION} | sed 's/^v//') && \
+ARG BRANCH=main
+RUN COMMIT=$(cat /tmp/commit_sha) && \
+    COMMIT_SHORT=$(cat /tmp/commit_sha_short) && \
     mkdir /build && \
     dotnet publish ./src/octo-fiesta.sln \
         -p:RuntimeIdentifiers=$RUNTIME \
         -p:Configuration=Release \
-        -p:Version=$CLEAN_VERSION \
+        -p:Version=0.4+${COMMIT_SHORT} \
         -p:PublishDir=/build/bin
 
 # versioning (runtime)
-ARG COMMIT=$CLEAN_VERSION
-COPY <<EOF /build/package_info
+RUN COMMIT=$(cat /tmp/commit_sha) && \
+    COMMIT_SHORT=$(cat /tmp/commit_sha_short) && \
+    cat <<EOF > /build/package_info
 PackageAuthor=[lucapolesel](https://github.com/lucapolesel/docker-octo-fiesta)
 UpdateMethod=Docker
 Branch=$BRANCH
-PackageVersion=$COMMIT
+PackageVersion=${COMMIT}
+CommitShort=${COMMIT_SHORT}
 EOF
 
 # runtime stage ================================================================
