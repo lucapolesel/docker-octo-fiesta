@@ -33,8 +33,8 @@ COPY --from=source /src/ ./src
 
 # build backend
 ARG BRANCH=main
-RUN COMMIT=$(cat /src/commit_sha) && \
-    COMMIT_SHORT=$(cat /src/commit_sha_short) && \
+RUN COMMIT=$(cat ./src/commit_sha) && \
+    COMMIT_SHORT=$(cat ./src/commit_sha_short) && \
     mkdir /build && \
     dotnet publish ./src/octo-fiesta.sln \
         -p:RuntimeIdentifiers=$RUNTIME \
