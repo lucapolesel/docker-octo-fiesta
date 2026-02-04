@@ -10,11 +10,11 @@ FROM base AS source
 RUN apk add --no-cache git
 
 # Clone
-ARG BRANCH=main
+ARG BRANCH=dev
 RUN git clone --depth 1 --branch ${BRANCH} https://github.com/V1ck3s/octo-fiesta.git /src && \
     cd /src && \
-    git rev-parse HEAD > /tmp/commit_sha && \
-    git rev-parse --short HEAD > /tmp/commit_sha_short
+    git rev-parse HEAD > /src/commit_sha && \
+    git rev-parse --short HEAD > /src/commit_sha_short
 
 # normalize arch ===============================================================
 FROM base AS base-arm64
@@ -33,8 +33,8 @@ COPY --from=source /src/ ./src
 
 # build backend
 ARG BRANCH=main
-RUN COMMIT=$(cat /tmp/commit_sha) && \
-    COMMIT_SHORT=$(cat /tmp/commit_sha_short) && \
+RUN COMMIT=$(cat /src/commit_sha) && \
+    COMMIT_SHORT=$(cat /src/commit_sha_short) && \
     mkdir /build && \
     dotnet publish ./src/octo-fiesta.sln \
         -p:RuntimeIdentifiers=$RUNTIME \
@@ -43,8 +43,8 @@ RUN COMMIT=$(cat /tmp/commit_sha) && \
         -p:PublishDir=/build/bin
 
 # versioning (runtime)
-RUN COMMIT=$(cat /tmp/commit_sha) && \
-    COMMIT_SHORT=$(cat /tmp/commit_sha_short) && \
+RUN COMMIT=$(cat /src/commit_sha) && \
+    COMMIT_SHORT=$(cat /src/commit_sha_short) && \
     cat <<EOF > /build/package_info
 PackageAuthor=[lucapolesel](https://github.com/lucapolesel/docker-octo-fiesta)
 UpdateMethod=Docker
