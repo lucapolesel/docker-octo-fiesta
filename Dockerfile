@@ -32,7 +32,7 @@ RUN apk add --no-cache dotnet9-sdk
 COPY --from=source /src/ ./src
 
 # build backend
-ARG BRANCH=main
+ARG BRANCH=dev
 RUN COMMIT=$(cat ./src/commit_sha) && \
     COMMIT_SHORT=$(cat ./src/commit_sha_short) && \
     mkdir /build && \
@@ -43,8 +43,8 @@ RUN COMMIT=$(cat ./src/commit_sha) && \
         -p:PublishDir=/build/bin
 
 # versioning (runtime)
-RUN COMMIT=$(cat /src/commit_sha) && \
-    COMMIT_SHORT=$(cat /src/commit_sha_short) && \
+RUN COMMIT=$(cat ./src/commit_sha) && \
+    COMMIT_SHORT=$(cat ./src/commit_sha_short) && \
     cat <<EOF > /build/package_info
 PackageAuthor=[lucapolesel](https://github.com/lucapolesel/docker-octo-fiesta)
 UpdateMethod=Docker
